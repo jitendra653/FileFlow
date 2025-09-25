@@ -44,8 +44,8 @@ router.post('/create-payment', requireAuth, async (req: AuthRequest, res) => {
       payment_method: 'paypal',
     },
     redirect_urls: {
-      return_url: `${req.protocol}://${req.get('host')}/v1/user/execute-payment?authToken=${temporaryToken}`,
-      cancel_url: `${req.protocol}://${req.get('host')}/v1/user/cancel-payment`,
+      return_url: `${req.protocol}://${req.get('host')}/v1/plan/execute-payment?authToken=${temporaryToken}`,
+      cancel_url: `${req.protocol}://${req.get('host')}/v1/plan/cancel-payment`,
     },
     transactions: [
       {
@@ -147,9 +147,11 @@ router.get('/execute-payment', async (req, res) => {
       );
 
       // Ensure 'res' is properly used in the redirect
-      res.redirect(`/payment-success?status=success&plan=${plan}`);
+      res.redirect(`http://localhost:5173/payment-success?status=success&plan=${plan}`);
     });
   } catch (err) {
+          res.redirect(`http://localhost:5173`);
+
     console.error('Invalid or expired token:', err);
     res.status(400).json({ error: 'Invalid or expired token' });
   }

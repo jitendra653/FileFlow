@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import API_BASE_URL from '../utils/apiConfig';
 import { Socket } from 'socket.io-client';
 import { adminEvents, fileEvents } from '../utils/socketEvents';
 import { useSocket } from '../context/SocketContext';
@@ -126,7 +127,7 @@ const AdminDashboard = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/v1/admin/users?${new URLSearchParams({
+  const response = await fetch(`${API_BASE_URL}/v1/admin/users?${new URLSearchParams({
         page: userFilters.page.toString(),
         search: userFilters.search,
         status: userFilters.status,
@@ -145,7 +146,7 @@ const AdminDashboard = () => {
     if (!selectedUsers.length) return;
     
     try {
-      const response = await fetch('/v1/admin/users/bulk-action', {
+  const response = await fetch(`${API_BASE_URL}/v1/admin/users/bulk-action`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

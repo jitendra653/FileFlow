@@ -7,8 +7,8 @@ import logger from '../utils/logger';
 import bcrypt from 'bcrypt';
 
 const router = express.Router();
-
-router.get('/profile',
+// GET /profile/me - returns authenticated user's profile
+router.get('/me',
   requireAuth,
   async (req: AuthRequest, res) => {
     try {
@@ -57,7 +57,56 @@ router.get('/profile',
   }
 );
 
-router.patch('/profile',
+router.get('/',
+  requireAuth,
+  async (req: AuthRequest, res) => {
+    try {
+      const user = await UserModel.findById(req.user?.id || req.user?._id)
+        .select('-password');
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Get user's storage usage and file stats
+      const [storageStats, fileStats] = await Promise.all([
+        FileModel.aggregate([
+          { $match: { userId: user.userId } },
+          { $group: {
+            _id: null,
+            totalSize: { $sum: '$size' },
+            totalFiles: { $sum: 1 }
+          }}
+        ]),
+        FileModel.aggregate([
+          { $match: { userId: user.userId } },
+          { $group: {
+            _id: '$category',
+            count: { $sum: 1 },
+            totalSize: { $sum: '$size' }
+          }}
+        ])
+      ]);
+
+      const userProfile = {
+        ...user.toObject(),
+        storage: {
+          used: storageStats[0]?.totalSize || 0,
+          total: user.quota.storageLimit,
+          filesCount: storageStats[0]?.totalFiles || 0
+        },
+        categories: fileStats
+      };
+
+      res.json(userProfile);
+    } catch (error) {
+      logger.error('Error fetching user profile', { error });
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+router.patch('/',
   requireAuth,
   [
     body('email').optional().isEmail().withMessage('Invalid email'),
@@ -241,5 +290,72 @@ router.post('/files/bulk-operations',
     }
   }
 );
+
+// IP Whitelist Management Routes
+router.post('/ip-whitelist/enable', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const user = await UserModel.findById(req.user?.id || req.user?._id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    user.securitySettings = user.securitySettings || {};
+    user.securitySettings.ipWhitelist = user.securitySettings.ipWhitelist || { enabled: false, ips: [] };
+    user.securitySettings.ipWhitelist.enabled = true;
+    await user.save();
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error enabling IP whitelist', { error });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/ip-whitelist/disable', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const user = await UserModel.findById(req.user?.id || req.user?._id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    user.securitySettings = user.securitySettings || {};
+    user.securitySettings.ipWhitelist = user.securitySettings.ipWhitelist || { enabled: false, ips: [] };
+    user.securitySettings.ipWhitelist.enabled = false;
+    await user.save();
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error disabling IP whitelist', { error });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/ip-whitelist/add', requireAuth, [body('ip').isString().withMessage('IP is required')], async (req: AuthRequest, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const user = await UserModel.findById(req.user?.id || req.user?._id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    user.securitySettings = user.securitySettings || {};
+    user.securitySettings.ipWhitelist = user.securitySettings.ipWhitelist || { enabled: false, ips: [] };
+    if (!user.securitySettings.ipWhitelist.ips.includes(req.body.ip)) {
+      user.securitySettings.ipWhitelist.ips.push(req.body.ip);
+      await user.save();
+    }
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error adding IP to whitelist', { error });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/ip-whitelist/remove', requireAuth, [body('ip').isString().withMessage('IP is required')], async (req: AuthRequest, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const user = await UserModel.findById(req.user?.id || req.user?._id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    user.securitySettings = user.securitySettings || {};
+    user.securitySettings.ipWhitelist = user.securitySettings.ipWhitelist || { enabled: false, ips: [] };
+    user.securitySettings.ipWhitelist.ips = user.securitySettings.ipWhitelist.ips.filter((ip: string) => ip !== req.body.ip);
+    await user.save();
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error removing IP from whitelist', { error });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 export default router;

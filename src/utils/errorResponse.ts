@@ -45,13 +45,14 @@ export function createErrorResponse(options: ErrorResponseOptions): ErrorRespons
   return {
     error: {
       code: options.code,
-      message: options.message,
+      message: options?.message,
       type: options.type,
       details: options.details,
       requestId: options.requestId,
       traceId: options.traceId,
       timestamp: new Date().toISOString(),
-      path: options.path
+      path: options.path,
+      options: options
     }
   };
 }

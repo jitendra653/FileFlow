@@ -9,6 +9,8 @@ export interface IFile extends mongoose.Document {
   mimeType: string;
   downloads: number; // Track the number of downloads
   transformations?: number; // Track the number of transformations
+  caption?: string;
+  tags?: string[];
 }
 
 const FileSchema = new mongoose.Schema<IFile>({
@@ -20,6 +22,8 @@ const FileSchema = new mongoose.Schema<IFile>({
   mimeType: { type: String },
   downloads: { type: Number, default: 0 },
   transformations: { type: Number, default: 0 },
+  caption: { type: String },
+  tags: [{ type: String }]
 }, { timestamps: true });
 
 export default mongoose.model<IFile>('File', FileSchema);

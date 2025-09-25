@@ -20,10 +20,12 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import { Line } from 'react-chartjs-2';
 import axios from 'axios';
+import API_BASE_URL from '../utils/apiConfig';
 
 // Create an authenticated axios instance
 const createAuthenticatedApi = (token: string | null) => {
   return axios.create({
+    baseURL: API_BASE_URL,
     headers: {
       'Authorization': `Bearer ${token}`
     }

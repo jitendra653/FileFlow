@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import API_BASE_URL from '../utils/apiConfig';
 import { useSocket } from '../context/SocketContext';
 
 interface ProcessStatusUpdate {
@@ -48,7 +49,7 @@ export default function Dashboard() {
     });
 
     // Initial data fetch
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/v1/analytics`, {
+  fetch(`${API_BASE_URL}/v1/analytics`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
       },

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import API_BASE_URL from '../utils/apiConfig';
 
 interface LoginProps {
   onLogin: (token: string) => void;
@@ -17,7 +16,7 @@ export default function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
 
     try {
-  const response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

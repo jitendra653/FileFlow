@@ -5,6 +5,7 @@ import { createErrorResponse } from '../utils/errorResponse';
 import UserModel from '../models/user';
 import dotenv from 'dotenv';
 
+
 // Load environment variables
 dotenv.config();
 
@@ -14,11 +15,32 @@ if (!JWT_SECRET) {
   throw new Error('JWT_SECRET must be defined');
 }
 
+// Array of public paths (exact and prefix)
+const PUBLIC_PATHS = [
+  '/v1/files/preview',
+  '/v1/plan/execute-payment',
+  '/v1/plan/cancel-payment',
+  '/v1/plan/webhook/paypal',
+  '/v1/plan/cancel-payment'
+];
+
+function isPublicPath(path: string, originalUrl: string) {
+  return PUBLIC_PATHS.some(
+    publicPath => path === publicPath || originalUrl.startsWith(publicPath)
+  );
+}
+
 export interface AuthRequest extends Request {
   user?: any;
+  userId?: number;
 }
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  // Skip authentication for public endpoints
+  if (isPublicPath(req.path, req.originalUrl)) {
+    return next();
+  }
+
   const auth = req.headers.authorization;
   if (!auth) {
     logger.warn('Authorization header missing');
@@ -56,9 +78,13 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
 export async function enforceApiQuota(req: AuthRequest, res: Response, next: NextFunction) {
   try {
+    // Skip quota enforcement for public endpoints
+    if (isPublicPath(req.path, req.originalUrl)) {
+      return next();
+    }
+
     // Check all possible ID fields from the JWT token
     const userId = req.user?.id || req.user?._id || req.user?.userId;
-    
     logger.debug('Enforcing API quota', { 
       userId,
       tokenUser: req.user,
