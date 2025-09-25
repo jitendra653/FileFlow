@@ -1,0 +1,124 @@
+    <!-- API Service Health -->
+    <div class="mt-10">
+      <h2 class="text-2xl font-semibold text-blue-700 mb-4">API Service Health</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded shadow">
+          <thead>
+            <tr>
+              <th class="py-2 px-4 border-b">API Endpoint</th>
+              <th class="py-2 px-4 border-b">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% Object.entries(apiStatus).forEach(function([name, status]) { %>
+              <tr>
+                <td class="py-2 px-4 border-b"><%= name %></td>
+                <td class="py-2 px-4 border-b">
+                  <% if (status === 'UP') { %>
+                    <span class="inline-block px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold">UP</span>
+                  <% } else { %>
+                    <span class="inline-block px-3 py-1 rounded-full bg-red-100 text-red-700 font-semibold">DOWN</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Performance Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto py-10">
+    <h1 class="text-3xl font-bold text-center mb-8 text-blue-700">System Performance Dashboard</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- CPU Usage -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-5xl font-bold text-blue-500 mb-2"><%= cpuUsage %>%</div>
+        <div class="text-lg text-gray-700">CPU Usage (1m avg)</div>
+      </div>
+      <!-- Memory Usage -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-5xl font-bold text-green-500 mb-2"><%= memoryUsage %> MB</div>
+        <div class="text-lg text-gray-700">Memory Usage (<%= memoryUsagePercent %>%)</div>
+        <div class="text-xs text-gray-400">Total: <%= totalMemory %> MB</div>
+      </div>
+      <!-- Free Memory -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-3xl font-bold text-teal-500 mb-2"><%= freeMemory %> MB</div>
+        <div class="text-lg text-gray-700">Free Memory</div>
+      </div>
+      <!-- Uptime -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-5xl font-bold text-purple-500 mb-2"><%= uptime %></div>
+        <div class="text-lg text-gray-700">Uptime</div>
+      </div>
+      <!-- Load Average -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-3xl font-bold text-orange-500 mb-2"><%= loadAverage %></div>
+        <div class="text-lg text-gray-700">Load Average (1m, 5m, 15m)</div>
+      </div>
+      <!-- Disk Usage -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-2xl font-bold text-pink-500 mb-2"><%= diskUsage %></div>
+        <div class="text-lg text-gray-700">Disk Usage</div>
+      </div>
+      <!-- Network Info -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-xl font-bold text-indigo-500 mb-2"><%= netInfo %></div>
+        <div class="text-lg text-gray-700">Network (IPv4)</div>
+      </div>
+      <!-- Platform/Arch -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-2xl font-bold text-gray-800 mb-2"><%= platform %> / <%= arch %></div>
+        <div class="text-lg text-gray-700">Platform / Arch</div>
+      </div>
+      <!-- Hostname -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-xl font-bold text-gray-700 mb-2"><%= hostname %></div>
+        <div class="text-lg text-gray-700">Hostname</div>
+      </div>
+      <!-- Node Version -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+        <div class="text-xl font-bold text-lime-600 mb-2"><%= nodeVersion %></div>
+        <div class="text-lg text-gray-700">Node.js Version</div>
+      </div>
+    </div>
+
+    <!-- CPU Details -->
+    <div class="mt-10">
+      <h2 class="text-2xl font-semibold text-blue-700 mb-4">CPU Details</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded shadow">
+          <thead>
+            <tr>
+              <th class="py-2 px-4 border-b">Core</th>
+              <th class="py-2 px-4 border-b">Model</th>
+              <th class="py-2 px-4 border-b">Speed (MHz)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% cpuInfo.forEach(function(cpu, i) { %>
+              <tr>
+                <td class="py-2 px-4 border-b text-center"><%= i+1 %></td>
+                <td class="py-2 px-4 border-b"><%= cpu.model %></td>
+                <td class="py-2 px-4 border-b text-center"><%= cpu.speed %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-10 text-center text-gray-500 text-sm">
+      Last updated: <%= lastUpdated %>
+    </div>
+  </div>
+</body>
+</html>

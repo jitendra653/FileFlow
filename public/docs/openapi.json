@@ -1,0 +1,308 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FileFlow Project API",
+    "version": "0.2.0",
+    "description": "API documentation for the FileFlow Project. Includes endpoints for file uploads, downloads, transformations, and admin operations."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Returns the health status of the server and MongoDB connection.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/admin/seed": {
+      "post": {
+        "summary": "Create Dev User",
+        "description": "Creates a development user and returns a JWT token.",
+        "responses": {
+          "200": {
+            "description": "User created successfully."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/upload": {
+      "post": {
+        "summary": "Upload File",
+        "description": "Uploads a file using multipart/form-data.",
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully."
+          },
+          "400": {
+            "description": "Validation error."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/generate-token": {
+      "post": {
+        "summary": "Generate File Token",
+        "description": "Generates a temporary token for downloading a file.",
+        "responses": {
+          "200": {
+            "description": "Token generated successfully."
+          },
+          "400": {
+            "description": "Validation error."
+          },
+          "403": {
+            "description": "Unauthorized access."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/download": {
+      "get": {
+        "summary": "Download File",
+        "description": "Downloads a file using a valid token.",
+        "responses": {
+          "200": {
+            "description": "File downloaded successfully."
+          },
+          "403": {
+            "description": "Unauthorized access."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/transform": {
+      "get": {
+        "summary": "Transform Image",
+        "description": "Transforms an image by resizing or changing its format.",
+        "responses": {
+          "200": {
+            "description": "Image transformed successfully."
+          },
+          "400": {
+            "description": "Validation error."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/metrics": {
+      "get": {
+        "summary": "Prometheus Metrics",
+        "description": "Returns Prometheus metrics for monitoring.",
+        "responses": {
+          "200": {
+            "description": "Metrics retrieved successfully."
+          }
+        }
+      }
+    },
+    "/v1/docs": {
+      "get": {
+        "summary": "API Documentation",
+        "description": "Serves the API documentation using Redoc.",
+        "responses": {
+          "200": {
+            "description": "Documentation served successfully."
+          }
+        }
+      }
+    },
+    "/v1/auth/register": {
+      "post": {
+        "summary": "Register User",
+        "description": "Registers a new user with email and password.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully."
+          },
+          "400": {
+            "description": "User already exists."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "summary": "Login User",
+        "description": "Logs in a user and returns a JWT token.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful. Returns a JWT token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string" }
+                  }
+                }
+              }
+            },
+            "x-postman": {
+              "testScript": "if (pm.response.code === 200) {\n    const responseBody = pm.response.json();\n    if (responseBody.token) {\n        pm.globals.set(\"bearerToken\", responseBody.token);\n        console.log(\"Bearer token saved to environment variable: bearerToken\", responseBody.token);\n    } else {\n        console.error(\"Token not found in the response.\");\n    }\n} else {\n    console.error(\"Login failed with status code:\", pm.response.code);\n}"
+            }
+          },
+          "400": {
+            "description": "Email and password are required."
+          },
+          "401": {
+            "description": "Invalid credentials."
+          },
+          "404": {
+            "description": "User not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/user/create-payment": {
+      "post": {
+        "summary": "Create PayPal Payment",
+        "description": "Creates a PayPal payment for upgrading the user plan.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "plan": { "type": "string", "enum": ["free", "basic", "premium"] }
+                },
+                "required": ["plan"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment created successfully. Returns the approval URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "approvalUrl": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid plan."
+          },
+          "500": {
+            "description": "Failed to create PayPal payment."
+          }
+        }
+      }
+    },
+    "/v1/user/execute-payment": {
+      "get": {
+        "summary": "Execute PayPal Payment",
+        "description": "Executes a PayPal payment and updates the user plan.",
+        "parameters": [
+          { "name": "paymentId", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "PayerID", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "plan", "in": "query", "required": true, "schema": { "type": "string", "enum": ["free", "basic", "premium"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment executed successfully. Plan updated."
+          },
+          "400": {
+            "description": "Invalid payment details or plan."
+          },
+          "500": {
+            "description": "Failed to execute PayPal payment."
+          }
+        }
+      }
+    },
+    "/v1/user/cancel-payment": {
+      "get": {
+        "summary": "Cancel PayPal Payment",
+        "description": "Handles PayPal payment cancellation.",
+        "responses": {
+          "200": {
+            "description": "Payment cancelled successfully."
+          }
+        }
+      }
+    }
+  }
+}
