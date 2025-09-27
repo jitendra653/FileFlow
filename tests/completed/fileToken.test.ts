@@ -1,4 +1,4 @@
-import { signFileToken, verifyFileToken, createDownloadUrl } from '../src/utils/fileToken';
+import { signFileToken, verifyFileToken, createDownloadUrl } from '../../src/utils/fileToken';
 
 describe('fileToken utils', () => {
   test('sign and verify token', () => {

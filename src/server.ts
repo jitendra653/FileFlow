@@ -52,7 +52,7 @@ import { configureSession, validateSession, SessionManager } from './config/sess
 // Explicitly load the .env file
 dotenv.config({ path: '.env' });
 // dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
-
+console.log('Environment:', process.env.NODE_ENV || 'development');
 const app = express();
 
 // Use only the MongoDB-backed session for all routes
@@ -235,6 +235,7 @@ app.post('/contact',
         subject: `Contact Form: ${req.body.subject}`,
         text: `Name: ${req.body.firstName} ${req.body.lastName}\nEmail: ${req.body.email}\nSubject: ${req.body.subject}\nMessage: ${req.body.message}`
       };
+
       await transporter.sendMail(mailOptions);
 
       res.render('contactus', {
@@ -373,52 +374,55 @@ mongoose.connect(MONGO).then(() => {
   console.warn('MongoDB connection failed, continuing without DB:', err.message || err);
 });
 
+
 const httpServer = createServer(app);
 const io = initializeSocket(httpServer);
 logger.info('WebSocket server initialized');
 
-const server = httpServer.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-  logger.info('WebSocket server initialized');
-});
-
-// Initialize health monitoring
-healthMonitor.on('alerts', (alerts) => {
-  alerts.forEach(alert => {
-    if (alert.type === 'critical') {
-      logger.error('Critical system alert:', alert);
-      // Here you could add notification logic (email, SMS, etc.)
-    } else {
-      logger.warn('System warning:', alert);
-    }
+if (require.main === module) {
+  const server = httpServer.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+    logger.info('WebSocket server initialized');
   });
-});
 
-function shutdown(signal: string) {
-  logger.info(`Received ${signal}, shutting down...`);
-
-  // Stop health monitoring
-  healthMonitor.stop();
-  logger.info('Health monitoring stopped');
-
-  server.close(() => {
-    logger.info('HTTP server closed');
-    mongoose.connection.close(false).then(() => {
-      logger.info('MongoDB connection closed');
-      process.exit(0);
-    }).catch(err => {
-      logger.error('Error closing MongoDB connection', { error: err });
-      process.exit(1);
+  // Initialize health monitoring
+  healthMonitor.on('alerts', (alerts) => {
+    alerts.forEach(alert => {
+      if (alert.type === 'critical') {
+        logger.error('Critical system alert:', alert);
+        // Here you could add notification logic (email, SMS, etc.)
+      } else {
+        logger.warn('System warning:', alert);
+      }
     });
   });
 
-  setTimeout(() => {
-    logger.warn('Forcing shutdown');
-    process.exit(1);
-  }, 10000).unref();
-}
+  function shutdown(signal: string) {
+    logger.info(`Received ${signal}, shutting down...`);
 
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
+    // Stop health monitoring
+    healthMonitor.stop();
+    logger.info('Health monitoring stopped');
+
+    server.close(() => {
+      logger.info('HTTP server closed');
+      mongoose.connection.close(false).then(() => {
+        logger.info('MongoDB connection closed');
+        process.exit(0);
+      }).catch(err => {
+        logger.error('Error closing MongoDB connection', { error: err });
+        process.exit(1);
+      });
+    });
+
+    setTimeout(() => {
+      logger.warn('Forcing shutdown');
+      process.exit(1);
+    }, 10000).unref();
+  }
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+}
 
 export { app };

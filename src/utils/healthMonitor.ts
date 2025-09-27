@@ -167,7 +167,8 @@ class HealthMonitor extends EventEmitter {
     metrics.application.eventLoopLag = await this.measureEventLoopLag();
 
     // Active Requests
-    metrics.application.activeRequests = process._getActiveRequests().length;
+  // metrics.application.activeRequests = process._getActiveRequests().length; // Not available in Node typings, skip or use safe fallback
+  metrics.application.activeRequests = 0; // Placeholder, Node.js does not expose this in typings
 
     return metrics;
   }

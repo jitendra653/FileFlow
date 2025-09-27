@@ -7,7 +7,7 @@ import logger from '../utils/logger';
 const router = Router();
 
 // Get all active sessions for the current user
-router.get('/sessions', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const user = req.user as IUser;
     const sessions = SessionManager.getUserSessions(user.id);
@@ -29,7 +29,7 @@ router.get('/sessions', async (req, res) => {
 });
 
 // Terminate specific session
-router.delete('/sessions/:sessionId', async (req, res) => {
+router.delete('/:sessionId', async (req, res) => {
   try {
     const user = req.user as IUser;
     const { sessionId } = req.params;
@@ -64,7 +64,7 @@ router.delete('/sessions/:sessionId', async (req, res) => {
 });
 
 // Terminate all other sessions
-router.delete('/sessions', async (req, res) => {
+router.delete('/', async (req, res) => {
   try {
     const user = req.user as IUser;
     

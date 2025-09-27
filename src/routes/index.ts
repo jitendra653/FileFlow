@@ -66,7 +66,7 @@ userRoutes.use('/plan', requireAuth, enforceApiQuota, userPlanRouter);
  * Admin Routes
  * Requires admin authentication, strict rate limiting
  */
-adminRoutes.use('/users', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminRouter);
+adminRoutes.use('/', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminRouter);
 adminRoutes.use('/files', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminFilesRouter);
 adminRoutes.use('/security', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminSecurityDashboardRouter);
 

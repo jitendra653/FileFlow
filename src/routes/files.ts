@@ -1,4 +1,5 @@
 import archiver from 'archiver';
+import fs from 'fs';
 import express from 'express';
 import path from 'path';
 import { verifyFileToken, signFileToken, createDownloadUrl, createPreviewUrl } from '../utils/fileToken';
@@ -36,7 +37,7 @@ router.post('/user-files/bulk-download', requireAuth, async (req: AuthRequest, r
     const archive = archiver('zip', { zlib: { level: 9 } });
     archive.pipe(res);
     for (const file of files) {
-      archive.file(file.path, { name: file.originalName || file.name });
+      archive.file(file.path, { name: file.originalName });
     }
     archive.finalize();
   } catch (error) {
@@ -64,7 +65,7 @@ router.patch('/user-files/:fileId/annotation', requireAuth, [
   try {
     const file = await FileModel.findOne({ _id: req.params.fileId, userId: req?.user?.userId });
     if (!file || !file.mimeType.startsWith('image/')) return res.status(404).json({ error: 'Image file not found' });
-    file.annotation = req.body.annotation;
+  file.annotation = req.body.annotation;
     await file.save();
     res.json({ message: 'Annotation saved', file });
   } catch (error) {
@@ -93,9 +94,9 @@ router.post('/user-files/:fileId/favorite', requireAuth, async (req: AuthRequest
   try {
     const file = await FileModel.findOne({ _id: req.params.fileId, userId: req?.user?.userId });
     if (!file || !file.mimeType.startsWith('image/')) return res.status(404).json({ error: 'Image file not found' });
-    file.isFavorite = !file.isFavorite;
+  file.isFavorite = !file.isFavorite;
     await file.save();
-    res.json({ message: file.isFavorite ? 'Image favorited' : 'Image unfavorited', file });
+  res.json({ message: file.isFavorite ? 'Image favorited' : 'Image unfavorited', file });
   } catch (error) {
     logger.error('Error updating favorite status', { error });
     res.status(500).json({ error: 'Internal server error' });
@@ -147,11 +148,11 @@ router.delete('/user-files/:fileId', requireAuth, async (req: AuthRequest, res) 
     const file = await FileModel.findOne({ _id: req.params.fileId, userId: req?.user?.userId });
     if (!file) return res.status(404).json({ error: 'File not found' });
     try {
-      await fs.promises.unlink(file.path);
+  await fs.promises.unlink(file.path);
     } catch (error) {
       logger.error('Error deleting file from disk', { error });
     }
-    await file.delete();
+  await file.deleteOne();
     res.json({ message: 'File deleted' });
   } catch (error) {
     logger.error('Error deleting file', { error });

@@ -25,6 +25,9 @@ router.get('/users',
   ],
   async (req: AuthRequest, res) => {
     try {
+
+              // return res.status(400).json({ errors: "errors.array()" });
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -46,7 +49,7 @@ router.get('/users',
       // Build sort options
       const sortBy = req.query.sortBy as string || 'createdAt';
       const order = req.query.order === 'asc' ? 1 : -1;
-      const sort: { [key: string]: number } = { [sortBy]: order };
+      const sort: [string, 1 | -1][] = [[sortBy, order]];
 
       const users = await UserModel
         .find(query)
@@ -208,7 +211,7 @@ router.delete('/users/:userId',
 
       // Delete all user files
       await FileModel.deleteMany({ userId: user.userId });
-      await user.delete();
+      await user.deleteOne();
 
       logger.info(`Deleted user: ${user.id} by admin: ${req.user?.id}`);
       res.json({ message: 'User and associated data deleted successfully' });

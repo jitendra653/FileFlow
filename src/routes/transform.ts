@@ -2,7 +2,7 @@ import express from 'express';
 import { body, query, param, validationResult } from 'express-validator';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import FileModel from '../models/file';
-import TransformationModel from '../models/transformation';
+import TransformationModel, { ITransformation } from '../models/transformation';
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
@@ -113,8 +113,7 @@ router.get('/',
         status: 'processing',
         message: 'Starting transformation',
         details: {
-          transformationId: transformation._id,
-          operations: operations
+          transformationId: transformation._id
         }
       });
 

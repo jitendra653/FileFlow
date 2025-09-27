@@ -51,8 +51,7 @@ export function createErrorResponse(options: ErrorResponseOptions): ErrorRespons
       requestId: options.requestId,
       traceId: options.traceId,
       timestamp: new Date().toISOString(),
-      path: options.path,
-      options: options
+      path: options.path
     }
   };
 }

@@ -1,4 +1,4 @@
-import { calculateDynamicRateLimit } from '../config/securityScores';
+import { calculateDynamicRateLimit, getSecurityTier } from '../config/securityScores';
 import { IUser } from '../models/user';
 import { getSecurityScore } from '../utils/securityScoreCache';
 import client from 'prom-client';
@@ -7,8 +7,6 @@ import RedisStore from 'rate-limit-redis';
 import Redis from 'ioredis';
 import logger from '../utils/logger';
 import { Request, Response } from 'express';
-import { calculateDynamicRateLimit } from '../config/securityScores';
-import { User } from '../models/user';
 
 // Initialize metrics
 const dynamicRateLimitGauge = new client.Gauge({

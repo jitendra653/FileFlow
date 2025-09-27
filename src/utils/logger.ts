@@ -94,89 +94,168 @@ const logFormat = winston.format.combine(
   })
 );
 
-// Create custom format for console output
+
+
+
+// JSON format for files
+// const fileFormat = winston.format.combine(
+//   winston.format.timestamp(),
+//   winston.format.errors({ stack: true }),
+//   winston.format.json()
+// );
+
+// Console format (pretty)
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
+  winston.format.timestamp(),
   winston.format.printf((info: any) => {
     let log = `${info.timestamp} ${info.level}: ${info.message}`;
-    
-    // Add request context
-    if (info.requestId || info.traceId) {
-      log += ' |';
-      if (info.requestId) log += ` ReqID:${info.requestId}`;
-      if (info.traceId) log += ` TraceID:${info.traceId}`;
-    }
-
-    // Add error information
+    if (info.requestId) log += ` | ReqID:${info.requestId}`;
+    if (info.traceId) log += ` TraceID:${info.traceId}`;
     if (info.error) {
       log += `\n  Error: ${info.error.name}`;
       if (info.error.code) log += ` (${info.error.code})`;
       log += ` - ${info.error.message}`;
-      if (info.error.stack && process.env.NODE_ENV !== 'production') {
+      if (info.error.stack && process.env.NODE_ENV !== "production") {
         log += `\n  Stack: ${info.error.stack}`;
       }
     }
-
-    // Add performance metrics
     if (info.duration) {
       log += `\n  Duration: ${info.duration}ms`;
     }
-
     return log;
   })
 );
 
+// Create custom format for console output
+// const consoleFormat = winston.format.combine(
+//   winston.format.colorize(),
+//   winston.format.printf((info: any) => {
+//     let log = `${info.timestamp} ${info.level}: ${info.message}`;
+    
+//     // Add request context
+//     if (info.requestId || info.traceId) {
+//       log += ' |';
+//       if (info.requestId) log += ` ReqID:${info.requestId}`;
+//       if (info.traceId) log += ` TraceID:${info.traceId}`;
+//     }
+
+//     // Add error information
+//     if (info.error) {
+//       log += `\n  Error: ${info.error.name}`;
+//       if (info.error.code) log += ` (${info.error.code})`;
+//       log += ` - ${info.error.message}`;
+//       if (info.error.stack && process.env.NODE_ENV !== 'production') {
+//         log += `\n  Stack: ${info.error.stack}`;
+//       }
+//     }
+
+//     // Add performance metrics
+//     if (info.duration) {
+//       log += `\n  Duration: ${info.duration}ms`;
+//     }
+
+//     return log;
+//   })
+// );
+
 // Configure the logger
+const fileFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.errors({ stack: true }),
+  winston.format.json()
+);
+
+
+const queryableTransport = new (winston.transports.File as any)({
+  filename: path.join("logs", "queryable.log"),
+  level: "silly", // log everything
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+});
+
+
+// Create the logger
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: logFormat,
+  level: process.env.LOG_LEVEL || "info",
   defaultMeta: {
-    service: process.env.SERVICE_NAME || 'api',
-    environment: process.env.NODE_ENV || 'development',
+    service: process.env.SERVICE_NAME || "api",
+    environment: process.env.NODE_ENV || "development",
   },
   transports: [
-    // Console transport for development
+        queryableTransport,
+
+    // Console (human-readable)
     new winston.transports.Console({
-      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-      format: consoleFormat
+      level: process.env.NODE_ENV === "production" ? "info" : "debug",
+      format: consoleFormat,
     }),
 
-    // Application logs - Contains all log levels
+  new winston.transports.File({
+      filename: path.join("logs", "queryable.log"),
+      level: "silly",
+      format: fileFormat,
+      options: { flags: 'a' },
+    }),
+
+    // Application logs (rotating JSON)
     new DailyRotateFile({
-      dirname: 'logs',
-      filename: 'application-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
+      dirname: "logs",
+      filename: "application-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
       zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d',
-      level: 'info'
+      maxSize: "20m",
+      maxFiles: "14d",
+      level: "info",
+      format: fileFormat,
     }),
 
-    // Error logs - Contains only error and higher
+    // Error logs (rotating JSON)
     new DailyRotateFile({
-      dirname: 'logs',
-      filename: 'error-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
+      dirname: "logs",
+      filename: "error-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
       zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '30d',
-      level: 'error'
+      maxSize: "20m",
+      maxFiles: "30d",
+      level: "error",
+      format: fileFormat,
     }),
 
-    // Debug logs - Contains debug and higher (non-production only)
-    ...(process.env.NODE_ENV !== 'production' ? [
-      new DailyRotateFile({
-        dirname: 'logs',
-        filename: 'debug-%DATE%.log',
-        datePattern: 'YYYY-MM-DD',
-        zippedArchive: true,
-        maxSize: '20m',
-        maxFiles: '7d',
-        level: 'debug'
-      })
-    ] : [])
-  ]
+    ...(process.env.NODE_ENV !== "production"
+      ? [
+          new DailyRotateFile({
+            dirname: "logs",
+            filename: "debug-%DATE%.log",
+            datePattern: "YYYY-MM-DD",
+            zippedArchive: true,
+            maxSize: "20m",
+            maxFiles: "7d",
+            level: "debug",
+            format: fileFormat,
+          }),
+        ]
+      : []),
+  ],
 });
+
+export async function queryLogs(opts?: { limit?: number }) {
+  return new Promise<any[]>((resolve, reject) => {
+    queryableTransport.query(
+      {
+        from: new Date(Date.now() - 24*60*60*1000),
+        until: new Date(),
+        limit: opts?.limit ?? 100,
+        order: "desc",
+        fields: ["timestamp","level","message","stack"]
+      },
+      (err, results) => err ? reject(err) : resolve(results)
+    );
+  });
+}
 
 // Add performance monitoring
 logger.on('error', (error) => {

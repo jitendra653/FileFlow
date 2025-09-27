@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
-import { createErrorResponse } from '../utils/errorResponse';
+import { createErrorResponse, ErrorType } from '../utils/errorResponse';
 import UserModel from '../models/user';
 import dotenv from 'dotenv';
 
@@ -44,13 +44,21 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   const auth = req.headers.authorization;
   if (!auth) {
     logger.warn('Authorization header missing');
-    return res.status(401).json(createErrorResponse('Missing authorization header'));
+  return res.status(401).json(createErrorResponse({
+    code: 'AUTH_HEADER_MISSING',
+    message: 'Missing authorization header',
+  type: ErrorType.AUTHENTICATION
+  }));
   }
 
   const parts = auth.split(' ');
   if (parts.length !== 2 || parts[0] !== 'Bearer') {
     logger.warn('Malformed authorization header', { header: auth });
-    return res.status(401).json(createErrorResponse('Malformed authorization header'));
+  return res.status(401).json(createErrorResponse({
+    code: 'AUTH_HEADER_MALFORMED',
+    message: 'Malformed authorization header',
+  type: ErrorType.AUTHENTICATION
+  }));
   }
 
   const token = parts[1];
@@ -63,16 +71,32 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   } catch (err: any) {
     if (err.name === 'TokenExpiredError') {
       logger.warn('Token has expired', { error: err.message });
-      return res.status(401).json(createErrorResponse('Token has expired'));
+  return res.status(401).json(createErrorResponse({
+    code: 'TOKEN_EXPIRED',
+    message: 'Token has expired',
+  type: ErrorType.AUTHENTICATION
+  }));
     } else if (err.name === 'JsonWebTokenError') {
       logger.warn('Invalid token signature', { error: err.message });
-      return res.status(401).json(createErrorResponse('Invalid token signature'));
+  return res.status(401).json(createErrorResponse({
+    code: 'TOKEN_SIGNATURE_INVALID',
+    message: 'Invalid token signature',
+  type: ErrorType.AUTHENTICATION
+  }));
     } else if (err.name === 'NotBeforeError') {
       logger.warn('Token not yet valid', { error: err.message });
-      return res.status(401).json(createErrorResponse('Token not yet valid'));
+  return res.status(401).json(createErrorResponse({
+    code: 'TOKEN_NOT_YET_VALID',
+    message: 'Token not yet valid',
+  type: ErrorType.AUTHENTICATION
+  }));
     }
     logger.error('Unexpected token verification error', { error: err.message, errorType: err.name });
-    return res.status(401).json(createErrorResponse('Invalid token'));
+  return res.status(401).json(createErrorResponse({
+    code: 'TOKEN_INVALID',
+    message: 'Invalid token',
+  type: ErrorType.AUTHENTICATION
+  }));
   }
 }
 
@@ -93,7 +117,11 @@ export async function enforceApiQuota(req: AuthRequest, res: Response, next: Nex
 
     if (!userId) {
       logger.error('No user ID found in token', { user: req.user });
-      return res.status(401).json(createErrorResponse('Invalid authentication token'));
+  return res.status(401).json(createErrorResponse({
+    code: 'AUTH_TOKEN_INVALID',
+    message: 'Invalid authentication token',
+  type: ErrorType.AUTHENTICATION
+  }));
     }
 
     // Try to find user by either _id or userId
@@ -107,69 +135,82 @@ export async function enforceApiQuota(req: AuthRequest, res: Response, next: Nex
           { userId: Number(userId) }
         ]
       });
-      return res.status(404).json(createErrorResponse('User not found in the system'));
+  return res.status(404).json(createErrorResponse({
+    code: 'USER_NOT_FOUND',
+    message: 'User not found in the system',
+  type: ErrorType.NOT_FOUND
+  }));
     }
     const today = new Date();
     const endpoint = req.baseUrl + req.path;
 
     // Check if we need to reset the counter (new month)
-    const lastReset = new Date(user.quota.lastResetDate);
+  // Defensive: ensure quota properties exist
+  // Defensive: ensure quota properties exist (cast to any to avoid TS error)
+  const quota: any = user.quota;
+  if (!quota.lastResetDate) quota.lastResetDate = new Date();
+  if (!quota.apiUsageHistory) quota.apiUsageHistory = [];
+  const lastReset = new Date(quota.lastResetDate);
     if (lastReset.getMonth() !== today.getMonth() || lastReset.getFullYear() !== today.getFullYear()) {
-      user.quota.apiCallsMade = 0;
-      user.quota.lastResetDate = today;
-      if (!user.quota.apiUsageHistory) {
-        user.quota.apiUsageHistory = [];
+      quota.apiCallsMade = 0;
+      quota.lastResetDate = today;
+      if (!quota.apiUsageHistory) {
+        quota.apiUsageHistory = [];
       }
     }
 
     // Check quota limit
-    if (user.quota.apiCallsMade >= user.quota.apiCallLimit) {
-      const resetDate = new Date(user.quota.lastResetDate);
+    if (quota.apiCallsMade >= quota.apiCallLimit) {
+      const resetDate = new Date(quota.lastResetDate);
       resetDate.setMonth(resetDate.getMonth() + 1);
       return res.status(403).json(createErrorResponse({
-        message: `API call quota exceeded. Limit: ${user.quota.apiCallLimit}, Used: ${user.quota.apiCallsMade}.`,
-        nextReset: resetDate,
-        upgradeUrl: '/upgrade-plan',
-        currentPlan: user.plan
+        code: 'API_QUOTA_EXCEEDED',
+        message: `API call quota exceeded. Limit: ${quota.apiCallLimit}, Used: ${quota.apiCallsMade}.`,
+  type: ErrorType.RATE_LIMIT,
+        details: [
+          { code: 'NEXT_RESET', message: 'Next quota reset', value: resetDate },
+          { code: 'UPGRADE_URL', message: 'Upgrade URL', value: '/upgrade-plan' },
+          { code: 'CURRENT_PLAN', message: 'Current plan', value: user.plan }
+        ]
       }));
     }
 
     // Update API usage tracking
-    user.quota.apiCallsMade += 1;
+  quota.apiCallsMade += 1;
     
     // Track endpoint usage
     const todayStr = today.toISOString().split('T')[0];
-    const usageIndex = user.quota.apiUsageHistory.findIndex(
-      h => h.date.toISOString().split('T')[0] === todayStr
+    const usageIndex = quota.apiUsageHistory.findIndex(
+      (h: any) => h.date.toISOString().split('T')[0] === todayStr
     );
 
     if (usageIndex === -1) {
       // New day, create new record
-      user.quota.apiUsageHistory.push({
+      quota.apiUsageHistory.push({
         date: today,
         calls: 1,
         endpoints: new Map([[endpoint, 1]])
       });
     } else {
       // Update existing record
-      user.quota.apiUsageHistory[usageIndex].calls += 1;
-      const currentEndpoints = user.quota.apiUsageHistory[usageIndex].endpoints;
+      quota.apiUsageHistory[usageIndex].calls += 1;
+      const currentEndpoints = quota.apiUsageHistory[usageIndex].endpoints;
       currentEndpoints.set(endpoint, (currentEndpoints.get(endpoint) || 0) + 1);
     }
 
     // Keep only last 30 days of history
-    if (user.quota.apiUsageHistory.length > 30) {
-      user.quota.apiUsageHistory = user.quota.apiUsageHistory.slice(-30);
+    if (quota.apiUsageHistory.length > 30) {
+      quota.apiUsageHistory = quota.apiUsageHistory.slice(-30);
     }
 
     await user.save();
     
     // Add enhanced quota information to response headers
     res.set({
-      'X-RateLimit-Limit': user.quota.apiCallLimit.toString(),
-      'X-RateLimit-Remaining': (user.quota.apiCallLimit - user.quota.apiCallsMade).toString(),
-      'X-RateLimit-Used': user.quota.apiCallsMade.toString(),
-      'X-RateLimit-Reset': new Date(user.quota.lastResetDate).toISOString(),
+      'X-RateLimit-Limit': quota.apiCallLimit.toString(),
+      'X-RateLimit-Remaining': (quota.apiCallLimit - quota.apiCallsMade).toString(),
+      'X-RateLimit-Used': quota.apiCallsMade.toString(),
+      'X-RateLimit-Reset': new Date(quota.lastResetDate).toISOString(),
       'X-Plan-Type': user.plan
     });
     
@@ -180,6 +221,10 @@ export async function enforceApiQuota(req: AuthRequest, res: Response, next: Nex
       userId: req.user?.id,
       endpoint: req.baseUrl + req.path 
     });
-    res.status(500).json(createErrorResponse('Internal server error'));
+  res.status(500).json(createErrorResponse({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'Internal server error',
+  type: ErrorType.SERVER_ERROR
+  }));
   }
 }

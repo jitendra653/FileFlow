@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 
 jest.mock('../src/models/file');
 
-describe('POST /files/generate-token', () => {
+describe('POST /v1/files/generate-token', () => {
   let mockUser: any;
   let mockFile: any;
 
@@ -17,7 +17,7 @@ describe('POST /files/generate-token', () => {
 
   test('should generate a token and return token, url, and expiresAt', async () => {
     const response = await request(app)
-      .post('/files/generate-token')
+  .post('/v1/files/generate-token')
       .set('Authorization', `Bearer ${jwt.sign(mockUser, 'test-secret')}`)
       .send({ fileId: 'file123', expiresIn: '10m' });
 
@@ -29,7 +29,7 @@ describe('POST /files/generate-token', () => {
 
   test('should return 400 if fileId is missing', async () => {
     const response = await request(app)
-      .post('/files/generate-token')
+  .post('/v1/files/generate-token')
       .set('Authorization', `Bearer ${jwt.sign(mockUser, 'test-secret')}`)
       .send({});
 
@@ -41,7 +41,7 @@ describe('POST /files/generate-token', () => {
     (FileModel.findById as jest.Mock).mockResolvedValue(null);
 
     const response = await request(app)
-      .post('/files/generate-token')
+  .post('/v1/files/generate-token')
       .set('Authorization', `Bearer ${jwt.sign(mockUser, 'test-secret')}`)
       .send({ fileId: 'file123' });
 
@@ -53,7 +53,7 @@ describe('POST /files/generate-token', () => {
     mockFile.userId = 'anotherUser';
 
     const response = await request(app)
-      .post('/files/generate-token')
+  .post('/v1/files/generate-token')
       .set('Authorization', `Bearer ${jwt.sign(mockUser, 'test-secret')}`)
       .send({ fileId: 'file123' });
 
@@ -62,7 +62,7 @@ describe('POST /files/generate-token', () => {
   });
 });
 
-describe('POST /files/generate-token with responseFormat', () => {
+describe('POST /v1/files/generate-token with responseFormat', () => {
   let mockUser: any;
   let mockFile: any;
 
@@ -74,7 +74,7 @@ describe('POST /files/generate-token with responseFormat', () => {
 
   test('should return only token when responseFormat is token', async () => {
     const response = await request(app)
-      .post('/files/generate-token?responseFormat=token')
+  .post('/v1/files/generate-token?responseFormat=token')
       .set('Authorization', `Bearer ${jwt.sign(mockUser, 'test-secret')}`)
       .send({ fileId: 'file123', expiresIn: '10m' });
 
@@ -86,7 +86,7 @@ describe('POST /files/generate-token with responseFormat', () => {
 
   test('should return only url when responseFormat is url', async () => {
     const response = await request(app)
-      .post('/files/generate-token?responseFormat=url')
+  .post('/v1/files/generate-token?responseFormat=url')
       .set('Authorization', `Bearer ${jwt.sign(mockUser, 'test-secret')}`)
       .send({ fileId: 'file123', expiresIn: '10m' });
 
@@ -98,7 +98,7 @@ describe('POST /files/generate-token with responseFormat', () => {
 
   test('should return full response when responseFormat is full', async () => {
     const response = await request(app)
-      .post('/files/generate-token?responseFormat=full')
+  .post('/v1/files/generate-token?responseFormat=full')
       .set('Authorization', `Bearer ${jwt.sign(mockUser, 'test-secret')}`)
       .send({ fileId: 'file123', expiresIn: '10m' });
 
@@ -110,7 +110,7 @@ describe('POST /files/generate-token with responseFormat', () => {
 
   test('should default to full response when responseFormat is not provided', async () => {
     const response = await request(app)
-      .post('/files/generate-token')
+  .post('/v1/files/generate-token')
       .set('Authorization', `Bearer ${jwt.sign(mockUser, 'test-secret')}`)
       .send({ fileId: 'file123', expiresIn: '10m' });
 

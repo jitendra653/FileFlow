@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';   
 import fs from 'fs';
 import { requireAuth, AuthRequest } from '../middleware/auth';
-import { checkCategory } from '../middleware/validate';
+import checkCategory from '../middleware/validate';
 import FileModel from '../models/file';
 import UserModel from '../models/user';
 import { emitToUser, emitToAdmin, fileEvents } from '../utils/socketEvents';
@@ -85,7 +85,8 @@ router.post('/', requireAuth, ...(Array.isArray(checkCategory) ? checkCategory :
   let uploadedBytes = 0;
   req.on('data', (chunk) => {
     uploadedBytes += chunk.length;
-    const progress = Math.min(Math.round((uploadedBytes / (req.headers['content-length'] || 1)) * 100), 99);
+    const totalBytes = Number(req.headers['content-length']) || 1;
+    const progress = Math.min(Math.round((uploadedBytes / totalBytes) * 100), 99);
     
     processStatus.updateProgress(processId, progress, {
       bytesUploaded: uploadedBytes,

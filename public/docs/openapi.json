@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "FileFlow Project API",
-    "version": "0.2.0",
-    "description": "API documentation for the FileFlow Project. Includes endpoints for file uploads, downloads, transformations, and admin operations."
+    "title": "FileFlow Project API NEW",
+    "version": "1.0.0",
+    "description": "API documentation for the FileFlow Project. All endpoints are synchronized with backend routes as of September 27, 2025."
   },
   "servers": [
     {
@@ -26,24 +26,16 @@
     }
   ],
   "paths": {
-    "/v1/health": {
+    "/v1/analytics/plan": {
       "get": {
-        "summary": "Health Check",
-        "description": "Returns the health status of the server and MongoDB connection.",
+        "summary": "Get Plan Analytics",
+        "description": "Returns plan analytics for the authenticated user.",
         "responses": {
           "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/v1/admin/seed": {
-      "post": {
-        "summary": "Create Dev User",
-        "description": "Creates a development user and returns a JWT token.",
-        "responses": {
-          "200": {
-            "description": "User created successfully."
+            "description": "Plan analytics returned successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
           },
           "500": {
             "description": "Internal server error."
@@ -51,16 +43,16 @@
         }
       }
     },
-    "/v1/upload": {
-      "post": {
-        "summary": "Upload File",
-        "description": "Uploads a file using multipart/form-data.",
+    "/v1/analytics/system": {
+      "get": {
+        "summary": "System Analytics",
+        "description": "Returns system analytics data.",
         "responses": {
           "200": {
-            "description": "File uploaded successfully."
+            "description": "System analytics returned successfully."
           },
-          "400": {
-            "description": "Validation error."
+          "401": {
+            "description": "Unauthorized."
           },
           "500": {
             "description": "Internal server error."
@@ -68,22 +60,95 @@
         }
       }
     },
-    "/v1/files/generate-token": {
-      "post": {
-        "summary": "Generate File Token",
-        "description": "Generates a temporary token for downloading a file.",
+    "/v1/analytics/performance": {
+      "get": {
+        "summary": "Performance Analytics",
+        "description": "Returns performance analytics data.",
         "responses": {
           "200": {
-            "description": "Token generated successfully."
+            "description": "Performance analytics returned successfully."
           },
-          "400": {
-            "description": "Validation error."
+          "401": {
+            "description": "Unauthorized."
           },
-          "403": {
-            "description": "Unauthorized access."
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/analytics/trends/users": {
+      "get": {
+        "summary": "User Trends Analytics",
+        "description": "Returns user trends analytics data.",
+        "responses": {
+          "200": {
+            "description": "User trends analytics returned successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/sessions": {
+      "get": {
+        "summary": "List Active Sessions",
+        "description": "Returns a list of active sessions for the authenticated user.",
+        "responses": {
+          "200": {
+            "description": "List of sessions returned successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete All Sessions",
+        "description": "Deletes all sessions for the authenticated user.",
+        "responses": {
+          "200": {
+            "description": "All sessions deleted successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/sessions/{sessionId}": {
+      "delete": {
+        "summary": "Delete Session by ID",
+        "description": "Deletes a specific session by sessionId.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session deleted successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
           },
           "404": {
-            "description": "File not found."
+            "description": "Session not found."
           },
           "500": {
             "description": "Internal server error."
@@ -91,19 +156,55 @@
         }
       }
     },
-    "/v1/files/download": {
-      "get": {
-        "summary": "Download File",
-        "description": "Downloads a file using a valid token.",
+    "/v1/session/timeout": {
+      "put": {
+        "summary": "Set Session Timeout",
+        "description": "Sets the session timeout for the authenticated user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "File downloaded successfully."
+            "description": "Session timeout set successfully."
           },
-          "403": {
-            "description": "Unauthorized access."
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/sessions/{sessionId}/revoke": {
+      "post": {
+        "summary": "Revoke Session",
+        "description": "Revokes a specific session.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session revoked successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
           },
           "404": {
-            "description": "File not found."
+            "description": "Session not found."
           },
           "500": {
             "description": "Internal server error."
@@ -111,16 +212,19 @@
         }
       }
     },
-    "/v1/transform": {
+    "/v1/admin/security-dashboard": {
       "get": {
-        "summary": "Transform Image",
-        "description": "Transforms an image by resizing or changing its format.",
+        "summary": "Admin Security Dashboard",
+        "description": "Returns security metrics and dashboard data for admins.",
         "responses": {
           "200": {
-            "description": "Image transformed successfully."
+            "description": "Security dashboard data returned successfully."
           },
-          "400": {
-            "description": "Validation error."
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
           },
           "500": {
             "description": "Internal server error."
@@ -128,52 +232,19 @@
         }
       }
     },
-    "/v1/metrics": {
+    "/v1/admin/metrics": {
       "get": {
-        "summary": "Prometheus Metrics",
+        "summary": "Admin Metrics Endpoint",
         "description": "Returns Prometheus metrics for monitoring.",
         "responses": {
           "200": {
-            "description": "Metrics retrieved successfully."
-          }
-        }
-      }
-    },
-    "/v1/docs": {
-      "get": {
-        "summary": "API Documentation",
-        "description": "Serves the API documentation using Redoc.",
-        "responses": {
-          "200": {
-            "description": "Documentation served successfully."
-          }
-        }
-      }
-    },
-    "/v1/auth/register": {
-      "post": {
-        "summary": "Register User",
-        "description": "Registers a new user with email and password.",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": { "type": "string" },
-                  "password": { "type": "string" }
-                },
-                "required": ["email", "password"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "User registered successfully."
+            "description": "Prometheus metrics returned successfully."
           },
-          "400": {
-            "description": "User already exists."
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
           },
           "500": {
             "description": "Internal server error."
@@ -181,46 +252,643 @@
         }
       }
     },
-    "/v1/auth/login": {
+    "/v1/files/user-files": {
+      "get": {
+        "summary": "List User Files",
+        "description": "Returns a list of files for the authenticated user.",
+        "responses": {
+          "200": {
+            "description": "List of files returned successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/user-files/bulk-download": {
       "post": {
-        "summary": "Login User",
-        "description": "Logs in a user and returns a JWT token.",
+        "summary": "Bulk Download Files",
+        "description": "Downloads multiple files as a ZIP archive.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "email": { "type": "string" },
-                  "password": { "type": "string" }
+                  "fileIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
                 },
-                "required": ["email", "password"]
+                "required": [
+                  "fileIds"
+                ]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Login successful. Returns a JWT token.",
+            "description": "ZIP archive returned."
+          },
+          "400": {
+            "description": "Validation error."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Files not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/user-files/reorder": {
+      "post": {
+        "summary": "Reorder User Files",
+        "description": "Saves the new order of user files.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "order"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order saved successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/user-files/{fileId}/annotation": {
+      "patch": {
+        "summary": "Update File Annotation",
+        "description": "Updates the annotation for a specific file.",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "annotation": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "annotation"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Annotation updated successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/user-files/{fileId}/favorite": {
+      "post": {
+        "summary": "Toggle Favorite",
+        "description": "Favorites or unfavorites a file.",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Favorite status updated."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/user-files/{fileId}/metadata": {
+      "patch": {
+        "summary": "Update File Metadata",
+        "description": "Updates metadata (caption, tags) for a file.",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "caption": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Metadata updated successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/user-files/{fileId}/share": {
+        "post": {
+          "summary": "Share File",
+          "description": "Shares a file with another user or generates a shareable link.",
+          "parameters": [
+            {
+              "name": "fileId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "token": { "type": "string" }
-                  }
+                    "shareWithUserId": {
+                      "type": "string",
+                      "description": "User ID to share the file with (optional if generating a link)"
+                    },
+                    "generateLink": {
+                      "type": "boolean",
+                      "description": "Whether to generate a shareable link"
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "description": "Expiration time for the share link in seconds (optional)"
+                    }
+                  },
+                  "required": []
                 }
               }
-            },
-            "x-postman": {
-              "testScript": "if (pm.response.code === 200) {\n    const responseBody = pm.response.json();\n    if (responseBody.token) {\n        pm.globals.set(\"bearerToken\", responseBody.token);\n        console.log(\"Bearer token saved to environment variable: bearerToken\", responseBody.token);\n    } else {\n        console.error(\"Token not found in the response.\");\n    }\n} else {\n    console.error(\"Login failed with status code:\", pm.response.code);\n}"
             }
           },
-          "400": {
-            "description": "Email and password are required."
+          "responses": {
+          "200": {
+            "description": "File shared successfully."
           },
           "401": {
-            "description": "Invalid credentials."
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/transform/{fileId}": {
+        "post": {
+          "summary": "Transform File",
+          "description": "Transforms a file (e.g., image processing).",
+          "parameters": [
+            {
+              "name": "fileId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "description": "Type of transformation (e.g., resize, crop, convert)"
+                    },
+                    "options": {
+                      "type": "object",
+                      "description": "Transformation options (e.g., width, height, format)",
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": ["operation"]
+                }
+              }
+            }
+          },
+          "responses": {
+          "200": {
+            "description": "File transformed successfully."
+          },
+          "400": {
+            "description": "Validation error."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/user-files/{fileId}": {
+      "patch": {
+        "summary": "Rename File",
+        "description": "Renames a file.",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File renamed successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete File",
+        "description": "Deletes a file.",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/files/preview": {
+      "get": {
+        "summary": "Preview File",
+        "description": "Returns a preview of a file using a valid token.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File preview returned successfully."
+          },
+          "400": {
+            "description": "Missing or invalid token."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/admin/users": {
+      "get": {
+        "summary": "List All Users (Admin)",
+        "description": "Returns a list of all users. Admin access required.",
+        "responses": {
+          "200": {
+            "description": "List of users returned successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      },  "post": {
+      "summary": "Bulk User Action (Admin)",
+      "description": "Performs a bulk action on users. Admin access required.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Bulk action completed successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "403": {
+          "description": "Forbidden."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+    },
+    "/v1/admin/users/{userId}": {
+      "get": {
+        "summary": "Get User by ID (Admin)",
+        "description": "Returns details for a specific user by userId. Admin access required.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details returned successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "User not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }, "patch": {
+      "summary": "Update User (Admin)",
+      "description": "Updates a user's details. Admin access required.",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "User updated successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "403": {
+          "description": "Forbidden."
+        },
+        "404": {
+          "description": "User not found."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    },
+    "delete": {
+      "summary": "Delete User (Admin)",
+      "description": "Deletes a user. Admin access required.",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "User deleted successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "403": {
+          "description": "Forbidden."
+        },
+        "404": {
+          "description": "User not found."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+    },
+    "/v1/admin/users/{userId}/role": {
+      "patch": {
+        "summary": "Update User Role (Admin)",
+        "description": "Updates the role of a user. Admin access required.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User role updated successfully."
+          },
+          "400": {
+            "description": "Validation error."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
           },
           "404": {
             "description": "User not found."
@@ -231,78 +899,1331 @@
         }
       }
     },
-    "/v1/user/create-payment": {
-      "post": {
-        "summary": "Create PayPal Payment",
-        "description": "Creates a PayPal payment for upgrading the user plan.",
+    "/v1/admin/users/{userId}/status": {
+      "patch": {
+        "summary": "Update User Status (Admin)",
+        "description": "Updates the status of a user. Admin access required.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "plan": { "type": "string", "enum": ["free", "basic", "premium"] }
+                  "status": {
+                    "type": "string"
+                  }
                 },
-                "required": ["plan"]
+                "required": [
+                  "status"
+                ]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Payment created successfully. Returns the approval URL.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "approvalUrl": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "User status updated successfully."
           },
           "400": {
-            "description": "Invalid plan."
+            "description": "Validation error."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "User not found."
           },
           "500": {
-            "description": "Failed to create PayPal payment."
+            "description": "Internal server error."
           }
         }
       }
     },
-    "/v1/user/execute-payment": {
+    "/v1/admin/users/{userId}/activity": {
       "get": {
-        "summary": "Execute PayPal Payment",
-        "description": "Executes a PayPal payment and updates the user plan.",
+        "summary": "Get User Activity (Admin)",
+        "description": "Returns activity logs for a specific user. Admin access required.",
         "parameters": [
-          { "name": "paymentId", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "PayerID", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "plan", "in": "query", "required": true, "schema": { "type": "string", "enum": ["free", "basic", "premium"] } }
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
           "200": {
-            "description": "Payment executed successfully. Plan updated."
+            "description": "User activity returned successfully."
           },
-          "400": {
-            "description": "Invalid payment details or plan."
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "User not found."
           },
           "500": {
-            "description": "Failed to execute PayPal payment."
+            "description": "Internal server error."
           }
         }
       }
     },
-    "/v1/user/cancel-payment": {
+    "/v1/admin/files": {
       "get": {
-        "summary": "Cancel PayPal Payment",
-        "description": "Handles PayPal payment cancellation.",
+        "summary": "List All Files (Admin)",
+        "description": "Returns a list of all files. Admin access required.",
         "responses": {
           "200": {
-            "description": "Payment cancelled successfully."
+            "description": "List of files returned successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/admin/files/{fileId}": {
+      "get": {
+        "summary": "Get File by ID (Admin)",
+        "description": "Returns details for a specific file. Admin access required.",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File details returned successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update File (Admin)",
+        "description": "Updates a file's metadata. Admin access required.",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File updated successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete File (Admin)",
+        "description": "Deletes a file. Admin access required.",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/admin/files/bulk-delete": {
+      "post": {
+        "summary": "Bulk Delete Files (Admin)",
+        "description": "Deletes multiple files. Admin access required.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Files deleted successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/v1/admin/files/stats/overview": {
+      "get": {
+        "summary": "Files Stats Overview (Admin)",
+        "description": "Returns overview statistics for files. Admin access required.",
+        "responses": {
+          "200": {
+            "description": "Stats overview returned successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "500": {
+            "description": "Internal server error."
           }
         }
       }
     }
+    ,
+    "/v1/admin/security-dashboard/alerts": {
+      "get": {
+        "summary": "Get Security Alerts (Admin)",
+        "description": "Returns all security alerts (warnings and critical). Admin access required.",
+        "responses": {
+          "200": { "description": "Security alerts returned successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." },
+          "500": { "description": "Internal server error." }
+        }
+      }
+    },
+    "/v1/admin/security-dashboard/rate-limits": {
+      "get": {
+        "summary": "Get Rate Limit Status (Admin)",
+        "description": "Returns rate limit status for all users. Admin access required.",
+        "responses": {
+          "200": { "description": "Rate limit status returned successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." },
+          "500": { "description": "Internal server error." }
+        }
+      }
+    },
+    "/v1/admin/security-dashboard/metrics": {
+      "get": {
+        "summary": "Get Security Metrics (Admin)",
+        "description": "Returns overall security metrics. Admin access required.",
+        "responses": {
+          "200": { "description": "Security metrics returned successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." },
+          "500": { "description": "Internal server error." }
+        }
+      }
+    },
+    "/v1/admin/security-dashboard/scores": {
+      "get": {
+        "summary": "Get Security Scores (Admin)",
+        "description": "Returns security scores for all users. Admin access required.",
+        "responses": {
+          "200": { "description": "Security scores returned successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." },
+          "500": { "description": "Internal server error." }
+        }
+      }
+    },
+    "/v1/admin/security-dashboard/users/{userId}": {
+      "get": {
+        "summary": "Get Security Metrics for User (Admin)",
+        "description": "Returns security metrics for a specific user. Admin access required.",
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Security metrics returned successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." },
+          "404": { "description": "User not found." },
+          "500": { "description": "Internal server error." }
+        }
+      }
+    },
+    "/v1/admin/security-dashboard/threats": {
+      "get": {
+        "summary": "Get Active Threats (Admin)",
+        "description": "Returns all active threats. Admin access required.",
+        "responses": {
+          "200": { "description": "Active threats returned successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." },
+          "500": { "description": "Internal server error." }
+        }
+      }
+    },
+    "/v1/admin/security-dashboard/blocked-ips": {
+      "get": {
+        "summary": "Get Blocked IPs (Admin)",
+        "description": "Returns all blocked IP addresses. Admin access required.",
+        "responses": {
+          "200": { "description": "Blocked IPs returned successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." },
+          "500": { "description": "Internal server error." }
+        }
+      }
+    },
+    "/v1/admin/security-dashboard/audit-log": {
+      "get": {
+        "summary": "Get Security Audit Log (Admin)",
+        "description": "Returns the security audit log. Admin access required.",
+        "responses": {
+          "200": { "description": "Security audit log returned successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." },
+          "500": { "description": "Internal server error." }
+        }
+      }
+    },
+    "/v1/admin/security-dashboard/sessions": {
+      "get": {
+        "summary": "Get Active Sessions Overview (Admin)",
+        "description": "Returns an overview of all active sessions. Admin access required.",
+        "responses": {
+          "200": { "description": "Active sessions overview returned successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." },
+          "500": { "description": "Internal server error." }
+        }
+      }
+    },
+  "/v1/profile/storage/stats": {
+    "get": {
+      "summary": "Get User Storage Stats",
+      "description": "Returns storage usage statistics for the authenticated user.",
+      "responses": {
+        "200": {
+          "description": "Storage stats returned successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/profile/ip-whitelist/enable": {
+    "post": {
+      "summary": "Enable IP Whitelist",
+      "description": "Enables IP whitelisting for the authenticated user.",
+      "responses": {
+        "200": {
+          "description": "IP whitelist enabled successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/profile/ip-whitelist/disable": {
+    "post": {
+      "summary": "Disable IP Whitelist",
+      "description": "Disables IP whitelisting for the authenticated user.",
+      "responses": {
+        "200": {
+          "description": "IP whitelist disabled successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/profile/ip-whitelist/add": {
+    "post": {
+      "summary": "Add IP to Whitelist",
+      "description": "Adds an IP address to the user's whitelist.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ip": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ip"
+              ]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "IP added to whitelist successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/profile/ip-whitelist/remove": {
+    "post": {
+      "summary": "Remove IP from Whitelist",
+      "description": "Removes an IP address from the user's whitelist.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ip": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ip"
+              ]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "IP removed from whitelist successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/profile/files/bulk-operations": {
+    "post": {
+      "summary": "Bulk File Operations",
+      "description": "Performs bulk operations on user files (delete, move, etc.).",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Bulk operation completed successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/profile/me": {
+    "get": {
+      "summary": "Get Current User Profile",
+      "description": "Returns the profile of the currently authenticated user.",
+      "responses": {
+        "200": {
+          "description": "User profile returned successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/profile": {
+    "get": {
+      "summary": "Get User Profile",
+      "description": "Returns the profile of the authenticated user.",
+      "responses": {
+        "200": {
+          "description": "User profile returned successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    },
+    "patch": {
+      "summary": "Update User Profile",
+      "description": "Updates the profile of the authenticated user.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "User profile updated successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/2fa/setup": {
+    "get": {
+      "summary": "Get 2FA Setup Info",
+      "description": "Returns information needed to set up two-factor authentication.",
+      "responses": {
+        "200": {
+          "description": "2FA setup info returned."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    },
+    "post": {
+      "summary": "Setup 2FA",
+      "description": "Sets up two-factor authentication for the user.",
+      "responses": {
+        "200": {
+          "description": "2FA setup successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/2fa/enable": {
+    "post": {
+      "summary": "Enable 2FA",
+      "description": "Enables two-factor authentication for the user.",
+      "responses": {
+        "200": {
+          "description": "2FA enabled successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/2fa/disable": {
+    "post": {
+      "summary": "Disable 2FA",
+      "description": "Disables two-factor authentication for the user.",
+      "responses": {
+        "200": {
+          "description": "2FA disabled successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/2fa/backup-codes": {
+    "post": {
+      "summary": "Generate 2FA Backup Codes",
+      "description": "Generates backup codes for two-factor authentication.",
+      "responses": {
+        "200": {
+          "description": "Backup codes generated successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/2fa/verify": {
+    "post": {
+      "summary": "Verify 2FA Code",
+      "description": "Verifies a two-factor authentication code.",
+      "responses": {
+        "200": {
+          "description": "2FA code verified successfully."
+        },
+        "400": {
+          "description": "Invalid code."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/health": {
+    "get": {
+      "summary": "Health Check",
+      "description": "Returns the health status of the server and MongoDB connection.",
+      "responses": {
+        "200": {
+          "description": "OK"
+        }
+      }
+    }
+  },
+  "/v1/health/metrics": {
+    "get": {
+      "summary": "Get Health Metrics",
+      "description": "Returns health metrics for the system.",
+      "responses": {
+        "200": {
+          "description": "Health metrics returned successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/health/metrics/history": {
+    "get": {
+      "summary": "Get Health Metrics History",
+      "description": "Returns historical health metrics.",
+      "responses": {
+        "200": {
+          "description": "Health metrics history returned successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/health/alerts": {
+    "get": {
+      "summary": "Get Health Alerts",
+      "description": "Returns health alerts.",
+      "responses": {
+        "200": {
+          "description": "Health alerts returned successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/health/thresholds": {
+    "post": {
+      "summary": "Set Health Thresholds",
+      "description": "Sets health thresholds for the system.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Thresholds set successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/admin/seed": {
+    "post": {
+      "summary": "Create Dev User",
+      "description": "Creates a development user and returns a JWT token.",
+      "responses": {
+        "200": {
+          "description": "User created successfully."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/upload": {
+    "post": {
+      "summary": "Upload File",
+      "description": "Uploads a file using multipart/form-data.",
+      "responses": {
+        "200": {
+          "description": "File uploaded successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/files/generate-token": {
+    "post": {
+      "summary": "Generate File Access Token",
+      "description": "Generates a secure token for file preview/download.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "fileId": {
+                  "type": "string"
+                },
+                "expiresIn": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fileId"
+              ]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Token generated successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "403": {
+          "description": "Forbidden."
+        },
+        "404": {
+          "description": "File not found."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/files/download": {
+    "get": {
+      "summary": "Download File",
+      "description": "Downloads a file using a valid token.",
+      "parameters": [
+        {
+          "name": "token",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "File downloaded successfully."
+        },
+        "400": {
+          "description": "Missing or invalid token."
+        },
+        "404": {
+          "description": "File not found."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/transform": {
+    "get": {
+      "summary": "Transform Image",
+      "description": "Transforms an image by resizing or changing its format.",
+      "responses": {
+        "200": {
+          "description": "Image transformed successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/transform/history/{fileId}": {
+    "get": {
+      "summary": "Get Transformation History",
+      "description": "Returns the transformation history for a file.",
+      "parameters": [
+        {
+          "name": "fileId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Transformation history returned successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "404": {
+          "description": "File not found."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/transform/image": {
+    "post": {
+      "summary": "Transform Image",
+      "description": "Transforms an image file.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Image transformed successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "404": {
+          "description": "File not found or not an image."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/transform/status/{transformationId}": {
+    "get": {
+      "summary": "Get Transformation Status",
+      "description": "Returns the status of a transformation.",
+      "parameters": [
+        {
+          "name": "transformationId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Transformation status returned successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "404": {
+          "description": "Transformation not found."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/transform/stats": {
+    "get": {
+      "summary": "Get Transformation Stats",
+      "description": "Returns statistics for transformations.",
+      "responses": {
+        "200": {
+          "description": "Transformation stats returned successfully."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/metrics": {
+    "get": {
+      "summary": "Prometheus Metrics",
+      "description": "Returns Prometheus metrics for monitoring.",
+      "responses": {
+        "200": {
+          "description": "Metrics retrieved successfully."
+        }
+      }
+    }
+  },
+  "/v1/docs": {
+    "get": {
+      "summary": "API Documentation",
+      "description": "Serves the API documentation using Redoc.",
+      "responses": {
+        "200": {
+          "description": "Documentation served successfully."
+        }
+      }
+    }
+  },
+  "/v1/docs/openapi.json": {
+    "get": {
+      "summary": "Get OpenAPI JSON",
+      "description": "Returns the OpenAPI JSON specification.",
+      "responses": {
+        "200": {
+          "description": "OpenAPI JSON returned successfully."
+        }
+      }
+    }
+  },
+  "/v1/docs/": {
+    "get": {
+      "summary": "Get API Docs",
+      "description": "Returns the API documentation UI.",
+      "responses": {
+        "200": {
+          "description": "API documentation UI returned successfully."
+        }
+      }
+    }
+  },
+  "/v1/auth/register": {
+    "post": {
+      "summary": "Register User",
+      "description": "Registers a new user with email and password.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "password"
+              ]
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "User registered successfully."
+        },
+        "400": {
+          "description": "User already exists."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+  "/v1/auth/login": {
+    "post": {
+      "summary": "Login User",
+      "description": "Logs in a user and returns a JWT token.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "password"
+              ]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Login successful. Returns a JWT token.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/v1/user/create-payment": {
+    "post": {
+      "summary": "Create PayPal Payment",
+      "description": "Creates a PayPal payment for upgrading the user plan.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string",
+                  "enum": [
+                    "free",
+                    "basic",
+                    "premium"
+                  ]
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Payment created successfully. Returns the approval URL.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "approvalUrl": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Invalid plan."
+        },
+        "500": {
+          "description": "Failed to create PayPal payment."
+        }
+      }
+    }
+  },
+  "/v1/user/execute-payment": {
+    "get": {
+      "summary": "Execute PayPal Payment",
+      "description": "Executes a PayPal payment and updates the user plan.",
+      "parameters": [
+        {
+          "name": "paymentId",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "PayerID",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "plan",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "free",
+              "basic",
+              "premium"
+            ]
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Payment executed successfully. Plan updated."
+        },
+        "400": {
+          "description": "Invalid payment details or plan."
+        },
+        "500": {
+          "description": "Failed to execute PayPal payment."
+        }
+      }
+    }
+  },
+  "/v1/user/cancel-payment": {
+    "get": {
+      "summary": "Cancel PayPal Payment",
+      "description": "Handles PayPal payment cancellation.",
+      "responses": {
+        "200": {
+          "description": "Payment cancelled successfully."
+        }
+      }
+    }
+  },
+  "/v1/user/webhook/paypal": {
+    "post": {
+      "summary": "PayPal Webhook",
+      "description": "Handles PayPal webhook notifications.",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Webhook processed successfully."
+        },
+        "400": {
+          "description": "Invalid webhook payload."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
+  },
+ 
+
+  "/v1/admin/users/{userId}/plan": {
+    "patch": {
+      "summary": "Update User Plan (Admin)",
+      "description": "Updates a user's plan. Admin access required.",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "User plan updated successfully."
+        },
+        "400": {
+          "description": "Validation error."
+        },
+        "401": {
+          "description": "Unauthorized."
+        },
+        "403": {
+          "description": "Forbidden."
+        },
+        "404": {
+          "description": "User not found."
+        },
+        "500": {
+          "description": "Internal server error."
+        }
+      }
+    }
   }
+}
 }

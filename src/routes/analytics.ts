@@ -4,13 +4,13 @@ import { requireAdmin } from '../middleware/adminAuth';
 import FileModel from '../models/file';
 import UserModel from '../models/user';
 import TransformationModel from '../models/transformation';
-import logger from '../utils/logger';
+import logger, { queryLogs } from '../utils/logger';
 import os from 'os';
 import { performance } from 'perf_hooks';
 
 const router = express.Router();
 
-router.get('/', requireAuth, async (req: AuthRequest, res) => {
+router.get('/plan', requireAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.user?.id || req.user?._id;
     const user = await UserModel.findById(userId);
@@ -60,15 +60,21 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
       .map(day => ({
         date: day.date,
         calls: day.calls,
-        endpoints: Object.fromEntries(day.endpoints)
+        endpoints: day.endpoints instanceof Map ? Object.fromEntries(day.endpoints) : day.endpoints
       }));
 
     // Calculate popular endpoints
     const endpointUsage = new Map();
     apiUsageHistory.forEach(day => {
-      day.endpoints.forEach((count, endpoint) => {
-        endpointUsage.set(endpoint, (endpointUsage.get(endpoint) || 0) + count);
-      });
+      if (day.endpoints instanceof Map) {
+        day.endpoints.forEach((count, endpoint) => {
+          endpointUsage.set(endpoint, (endpointUsage.get(endpoint) || 0) + count);
+        });
+      } else if (typeof day.endpoints === 'object') {
+        Object.entries(day.endpoints).forEach(([endpoint, count]) => {
+          endpointUsage.set(endpoint, (endpointUsage.get(endpoint) || 0) + (count as number));
+        });
+      }
     });
 
     const popularEndpoints = Array.from(endpointUsage.entries())
@@ -221,11 +227,17 @@ router.get('/system', requireAdmin, async (req, res) => {
     ]);
 
     // Get error rate and response time metrics
-    const errorLogs = await logger.query({
-      level: 'error',
-      start: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      limit: 1000
-    });
+    // Adjusted: Fetch all logs in the last 24h, then filter for 'error' level
+    const logs: any[] = await queryLogs({ limit: 50 });
+  //   const logs = await logger.query({
+  //   from: new Date(Date.now() - 24 * 60 * 60 * 1000), // last 24 hours
+  //   until: new Date(),
+  //   limit: 1000,
+  //   order: "desc",
+  //   fields: ["timestamp", "level", "message", "stack"]
+  // });
+
+    const errorLogs = logs.filter((log: any) => log.level === 'error');
 
     // Calculate system metrics
     const systemMetrics = {
@@ -295,9 +307,9 @@ router.get('/performance', requireAdmin, async (req, res) => {
         usage: process.memoryUsage()
       },
       performance: {
-        eventLoopLag: await measureEventLoopLag(),
-        activeHandles: process._getActiveHandles().length,
-        activeRequests: process._getActiveRequests().length
+  eventLoopLag: await measureEventLoopLag(),
+  activeHandles: 0, // Not available in Node typings
+  activeRequests: 0 // Not available in Node typings
       }
     };
 

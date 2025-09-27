@@ -77,3 +77,4 @@ curl "http://localhost:3000/files/download?token=<TOKEN>" --output downloaded.pn
 curl "http://localhost:3000/transform?fileId=<FILE_ID>&width=200&height=200&format=webp" --output thumb.webp
 ```
 
+<!-- tests\rateLimit.test.ts -->

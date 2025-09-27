@@ -8,7 +8,11 @@ import { securityMonitor } from '../utils/securityMonitor';
 declare global {
   namespace Express {
     interface Request {
-      user?: IUser;
+      user?: {
+        
+        id?: string;
+        _id?: string;
+      };
     }
   }
 }

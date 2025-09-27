@@ -54,8 +54,7 @@ export const configureSession = (config: SessionConfig) => {
     rolling: true, // Reset maxAge on every response
     resave: false,
     saveUninitialized: false,
-    allowDeviceChange: config.allowDeviceChange || false, // Whether to allow sessions when device info changes
-    maxFailedValidations: config.maxFailedValidations || 3, // Maximum failed validations before requiring re-login
+  // allowDeviceChange removed: not a valid SessionOptions property
   });
 };
 

@@ -1,5 +1,5 @@
 import { emitToUser, fileEvents } from './socketEvents';
-import { TransformationDocument } from '../models/transformation';
+import TransformationDocument from '../models/transformation';
 import logger from './logger';
 
 interface ProcessStatus {

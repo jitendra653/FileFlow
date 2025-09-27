@@ -45,7 +45,8 @@ router.get('/files',
       // Build sort options
       const sortBy = req.query.sortBy as string || 'createdAt';
       const order = req.query.order === 'asc' ? 1 : -1;
-      const sort: { [key: string]: number } = { [sortBy]: order };
+      // Use array format for .sort to satisfy TS
+      const sort: [string, 1 | -1][] = [[sortBy, order]];
 
       const files = await FileModel
         .find(query)
@@ -151,7 +152,7 @@ router.delete('/files/:fileId',
       }
 
       // Delete file record
-      await file.delete();
+  await file.deleteOne();
 
       logger.info(`Deleted file: ${file.id} by admin: ${req.user?.id}`);
       res.json({ message: 'File deleted successfully' });
@@ -188,7 +189,7 @@ router.post('/files/bulk-delete',
       for (const file of files) {
         try {
           await fs.unlink(file.path);
-          await file.delete();
+          await file.deleteOne();
           results.success++;
         } catch (error) {
           results.failed++;

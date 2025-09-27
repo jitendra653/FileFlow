@@ -21,12 +21,21 @@ export interface IUser extends mongoose.Document {
     };
     sessionTimeout: number; // in minutes
   };
+  securityScore?: number; // Computed security score
   quota?: {
     storageUsed: number; // in bytes
     apiCallsMade: number;
     storageLimit: number; // in bytes
     apiCallLimit: number; // API call limit based on plan
+    apiUsageHistory: {
+      date: Date;
+      calls: number;
+      endpoints: Record<string, number>; // Track calls per endpoint
+    }[];
+    lastResetDate: Date;
   };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const planLimits = {
@@ -67,10 +76,20 @@ const UserSchema = new mongoose.Schema<IUser>({
       endpoints: { type: Map, of: Number } // Track calls per endpoint
     }]
   },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-// Auto-increment userId for each new user
+import bcrypt from 'bcryptjs';
+
+// Auto-increment userId for each new user and hash password
 UserSchema.pre('save', async function (next) {
+  // Hash password if it is new or modified
+  // if (this.isModified('password')) {
+  //   const salt = await bcrypt.genSalt(10);
+  //   this.password = await bcrypt.hash(this.password, salt);
+  // }
+
   if (!this.isNew) return next();
 
   const lastUser = await mongoose.model<IUser>('User').findOne().sort({ userId: -1 });

@@ -259,8 +259,9 @@ router.post('/files/bulk-operations',
         try {
           switch (operation) {
             case 'delete':
+              const fs = await import('fs/promises');
               await fs.unlink(file.path);
-              await file.delete();
+              await file.deleteOne();
               break;
 
             case 'updateCategory':
@@ -296,7 +297,13 @@ router.post('/ip-whitelist/enable', requireAuth, async (req: AuthRequest, res) =
   try {
     const user = await UserModel.findById(req.user?.id || req.user?._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    user.securitySettings = user.securitySettings || {};
+    if (!user.securitySettings) {
+      user.securitySettings = {
+        ipWhitelist: { enabled: false, ips: [] },
+        twoFactorAuth: { enabled: false, backupCodes: [] },
+        sessionTimeout: 60
+      };
+    }
     user.securitySettings.ipWhitelist = user.securitySettings.ipWhitelist || { enabled: false, ips: [] };
     user.securitySettings.ipWhitelist.enabled = true;
     await user.save();
@@ -311,7 +318,13 @@ router.post('/ip-whitelist/disable', requireAuth, async (req: AuthRequest, res) 
   try {
     const user = await UserModel.findById(req.user?.id || req.user?._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    user.securitySettings = user.securitySettings || {};
+    if (!user.securitySettings) {
+      user.securitySettings = {
+        ipWhitelist: { enabled: false, ips: [] },
+        twoFactorAuth: { enabled: false, backupCodes: [] },
+        sessionTimeout: 60
+      };
+    }
     user.securitySettings.ipWhitelist = user.securitySettings.ipWhitelist || { enabled: false, ips: [] };
     user.securitySettings.ipWhitelist.enabled = false;
     await user.save();
@@ -328,7 +341,11 @@ router.post('/ip-whitelist/add', requireAuth, [body('ip').isString().withMessage
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
     const user = await UserModel.findById(req.user?.id || req.user?._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    user.securitySettings = user.securitySettings || {};
+    user.securitySettings = user.securitySettings || {
+      ipWhitelist: { enabled: false, ips: [] },
+      twoFactorAuth: { enabled: false, backupCodes: [] },
+      sessionTimeout: 60
+    };
     user.securitySettings.ipWhitelist = user.securitySettings.ipWhitelist || { enabled: false, ips: [] };
     if (!user.securitySettings.ipWhitelist.ips.includes(req.body.ip)) {
       user.securitySettings.ipWhitelist.ips.push(req.body.ip);
@@ -347,7 +364,11 @@ router.post('/ip-whitelist/remove', requireAuth, [body('ip').isString().withMess
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
     const user = await UserModel.findById(req.user?.id || req.user?._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    user.securitySettings = user.securitySettings || {};
+    user.securitySettings = user.securitySettings || {
+      ipWhitelist: { enabled: false, ips: [] },
+      twoFactorAuth: { enabled: false, backupCodes: [] },
+      sessionTimeout: 60
+    };
     user.securitySettings.ipWhitelist = user.securitySettings.ipWhitelist || { enabled: false, ips: [] };
     user.securitySettings.ipWhitelist.ips = user.securitySettings.ipWhitelist.ips.filter((ip: string) => ip !== req.body.ip);
     await user.save();
