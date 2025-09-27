@@ -1,14 +1,12 @@
-
-import logger from './utils/logger';
+import logger from '../utils/logger';
 import { createServer } from 'http';
-import initializeSocket from './config/socket';
-import { healthMonitor } from './utils/healthMonitor';
-import app from './core/app';
-import { setupShutdown } from './core/shutdown';
-import {  connectDatabase, setupProcessHandlers } from './core/startup';
+import initializeSocket from '../config/socket';
+import { healthMonitor } from '../utils/healthMonitor';
+import app from './app';
+import { setupShutdown } from './shutdown';
+import { connectDatabase, setupProcessHandlers } from './startup';
 
 setupProcessHandlers();
-
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 logger.level = process.env.LOG_LEVEL || 'info';
 connectDatabase(process.env.MONGO_URI || 'mongodb://localhost:27017/rdx_project');

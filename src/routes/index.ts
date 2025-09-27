@@ -67,8 +67,8 @@ userRoutes.use('/plan', requireAuth, enforceApiQuota, userPlanRouter);
  * Requires admin authentication, strict rate limiting
  */
 adminRoutes.use('/', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminRouter);
-adminRoutes.use('/files', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminFilesRouter);
-adminRoutes.use('/security', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminSecurityDashboardRouter);
+adminRoutes.use('/', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminFilesRouter);
+adminRoutes.use('/security-dashboard', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminSecurityDashboardRouter);
 
 /**
  * File Operation Routes
@@ -91,14 +91,6 @@ router.use(`${API_VERSION}/2fa`, apiRateLimiter, requireAuth, twoFactorAuthRoute
 router.use(`${API_VERSION}/sessions`, apiRateLimiter, requireAuth, sessionRouter); // Session management routes
 
 /**
- * Health check endpoint
-// Mount route groups with version prefix and rate limits
-router.use(`${API_VERSION}`, publicRoutes); // Basic rate limiting
-router.use(`${API_VERSION}/auth`, strictRateLimiter, authRoutes); // Strict rate limiting for auth
-router.use(`${API_VERSION}`, apiRateLimiter, userRoutes); // API rate limiting for user routes
-router.use(`${API_VERSION}`, apiRateLimiter, fileRoutes); // API rate limiting for file operations
-router.use(`${API_VERSION}/admin`, strictRateLimiter, adminRoutes); // Strict rate limiting for admin routes
-
 // Mount Swagger UI
 router.use('/api-docs', swaggerRouter); // API Documentation
 
