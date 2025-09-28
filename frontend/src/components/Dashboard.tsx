@@ -49,7 +49,7 @@ export default function Dashboard() {
     });
 
     // Initial data fetch
-  fetch(`${API_BASE_URL}/v1/analytics`, {
+  fetch(`${API_BASE_URL}/v1/analytics/plan`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
       },

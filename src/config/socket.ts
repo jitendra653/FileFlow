@@ -23,7 +23,7 @@ export default function initializeSocket(server: Server) {
   // Authentication middleware
   io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
+      const token = socket.handshake.headers?.cookie?.replace('access_token=', '') || socket.handshake.headers.authorization?.replace('Bearer ', '');
       if (!token) {
         return next(new Error('Authentication error'));
       }

@@ -6,6 +6,9 @@ import adminSecurityDashboardRouter from './adminSecurityDashboard';
 import filesRouter from './files';
 import adminRouter from './admin';
 import adminFilesRouter from './adminFiles';
+import adminLogsRouter from './adminLogs';
+import adminUsersRouter from './adminUsers';
+import adminAnalyticsRouter from './adminAnalytics';
 import userProfileRouter from './userProfile';
 import docsRouter from './docs';
 import transformRouter from './transform';
@@ -69,6 +72,9 @@ userRoutes.use('/plan', requireAuth, enforceApiQuota, userPlanRouter);
 adminRoutes.use('/', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminRouter);
 adminRoutes.use('/', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminFilesRouter);
 adminRoutes.use('/security-dashboard', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminSecurityDashboardRouter);
+adminRoutes.use('/logs', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminLogsRouter);
+adminRoutes.use('/users', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminUsersRouter);
+adminRoutes.use('/analytics', requireAuth, enforceApiQuota, ipWhitelist, require2FA, adminAnalyticsRouter);
 
 /**
  * File Operation Routes

@@ -1,4 +1,6 @@
+
 import { io, Socket } from 'socket.io-client';
+import API_BASE_URL from './apiConfig';
 
 let socket: Socket | null = null;
 
@@ -7,8 +9,8 @@ export const initializeSocket = (token: string) => {
     socket.disconnect();
   }
 
-  socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
-    auth: { token },
+  socket = io(API_BASE_URL, {
+    withCredentials: true,
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,

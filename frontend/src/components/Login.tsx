@@ -1,23 +1,21 @@
+
 import React, { useState } from 'react';
 import API_BASE_URL from '../utils/apiConfig';
+import { useAuth } from '../context/AuthContext';
 
-interface LoginProps {
-  onLogin: (token: string) => void;
-}
-
-export default function Login({ onLogin }: LoginProps) {
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { refresh } = useAuth();
 
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     try {
-  const response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -25,14 +23,11 @@ export default function Login({ onLogin }: LoginProps) {
         credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || 'Failed to login');
       }
-
-      onLogin(data.token);
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to login');
       console.error('Login error:', err);

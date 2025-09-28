@@ -5,6 +5,15 @@ import logger from '../utils/logger';
 
 const router = express.Router();
 
+router.get('/', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    version: process.env.npm_package_version,
+    timestamp: new Date().toISOString()
+  });
+});
+
+
 // Get current health metrics
 router.get('/metrics', requireAdmin, (req, res) => {
   try {

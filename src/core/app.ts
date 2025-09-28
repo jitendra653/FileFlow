@@ -12,6 +12,7 @@ import 'newrelic';
 import { systemPerformanceHandler } from './systemPerformance';
 import contactRouter from '../contact';
 import { metricsMiddleware, metricsRoute } from './metrics';
+import cookieParser from 'cookie-parser';
 
 dotenv.config({ path: '.env' });
 
@@ -29,6 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 app.use(express.static('public'));
 app.use(express.json());
+app.use(cookieParser());
 
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'your-secret-key',

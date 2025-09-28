@@ -41,27 +41,23 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     return next();
   }
 
+  let token: string | undefined;
   const auth = req.headers.authorization;
-  if (!auth) {
-    logger.warn('Authorization header missing');
-  return res.status(401).json(createErrorResponse({
-    code: 'AUTH_HEADER_MISSING',
-    message: 'Missing authorization header',
-  type: ErrorType.AUTHENTICATION
-  }));
+  if (auth && auth.startsWith('Bearer ')) {
+    token = auth.split(' ')[1];
+  } else if (req.cookies && req.cookies.access_token) {
+    token = req.cookies.access_token;
   }
 
-  const parts = auth.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    logger.warn('Malformed authorization header', { header: auth });
-  return res.status(401).json(createErrorResponse({
-    code: 'AUTH_HEADER_MALFORMED',
-    message: 'Malformed authorization header',
-  type: ErrorType.AUTHENTICATION
-  }));
+  if (!token) {
+    logger.warn('No JWT found in Authorization header or cookie');
+    return res.status(401).json(createErrorResponse({
+      code: 'AUTH_TOKEN_MISSING',
+      message: 'Authentication token missing',
+      type: ErrorType.AUTHENTICATION
+    }));
   }
 
-  const token = parts[1];
   try {
     logger.debug('Attempting to verify token', { tokenLength: token.length });
     const payload = jwt.verify(token, JWT_SECRET!);
@@ -71,32 +67,32 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   } catch (err: any) {
     if (err.name === 'TokenExpiredError') {
       logger.warn('Token has expired', { error: err.message });
-  return res.status(401).json(createErrorResponse({
-    code: 'TOKEN_EXPIRED',
-    message: 'Token has expired',
-  type: ErrorType.AUTHENTICATION
-  }));
+      return res.status(401).json(createErrorResponse({
+        code: 'TOKEN_EXPIRED',
+        message: 'Token has expired',
+        type: ErrorType.AUTHENTICATION
+      }));
     } else if (err.name === 'JsonWebTokenError') {
       logger.warn('Invalid token signature', { error: err.message });
-  return res.status(401).json(createErrorResponse({
-    code: 'TOKEN_SIGNATURE_INVALID',
-    message: 'Invalid token signature',
-  type: ErrorType.AUTHENTICATION
-  }));
+      return res.status(401).json(createErrorResponse({
+        code: 'TOKEN_SIGNATURE_INVALID',
+        message: 'Invalid token signature',
+        type: ErrorType.AUTHENTICATION
+      }));
     } else if (err.name === 'NotBeforeError') {
       logger.warn('Token not yet valid', { error: err.message });
-  return res.status(401).json(createErrorResponse({
-    code: 'TOKEN_NOT_YET_VALID',
-    message: 'Token not yet valid',
-  type: ErrorType.AUTHENTICATION
-  }));
+      return res.status(401).json(createErrorResponse({
+        code: 'TOKEN_NOT_YET_VALID',
+        message: 'Token not yet valid',
+        type: ErrorType.AUTHENTICATION
+      }));
     }
     logger.error('Unexpected token verification error', { error: err.message, errorType: err.name });
-  return res.status(401).json(createErrorResponse({
-    code: 'TOKEN_INVALID',
-    message: 'Invalid token',
-  type: ErrorType.AUTHENTICATION
-  }));
+    return res.status(401).json(createErrorResponse({
+      code: 'TOKEN_INVALID',
+      message: 'Invalid token',
+      type: ErrorType.AUTHENTICATION
+    }));
   }
 }
 
